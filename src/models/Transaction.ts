@@ -2,9 +2,10 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  JoinColumn,
-  ManyToOne,
   CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 import Category from './Category';
@@ -23,17 +24,19 @@ class Transaction {
   @Column()
   value: number;
 
-  @ManyToOne(() => Category, category => category.transaction, { eager: true })
-  @JoinColumn({ name: 'category_id' })
-  category: Category;
-
   @Column()
   category_id: string;
+
+  @ManyToOne(() => Category, category => category.transactions, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'category_id' })
+  category: Category;
 
   @CreateDateColumn()
   created_at: Date;
 
-  @CreateDateColumn()
+  @UpdateDateColumn()
   updated_at: Date;
 }
 

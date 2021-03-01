@@ -1,15 +1,23 @@
-import { getCustomRepository, getRepository } from 'typeorm';
+import { getRepository, getCustomRepository } from 'typeorm';
+
+import Category from '../models/Category';
 import AppError from '../errors/AppError';
 
 import TransactionsRepository from '../repositories/TransactionsRepository';
-
 import Transaction from '../models/Transaction';
-import Category from '../models/Category';
 
 interface Request {
   title: string;
-  type: 'income' | 'outcome';
   value: number;
+  type: 'income' | 'outcome';
+  category: string;
+}
+
+interface Response {
+  id: string;
+  title: string;
+  value: number;
+  type: 'income' | 'outcome';
   category: string;
 }
 
@@ -20,36 +28,46 @@ class CreateTransactionService {
     type,
     category,
   }: Request): Promise<Transaction> {
-    const transactionsRepository = getCustomRepository(TransactionsRepository);
     const categoryRepository = getRepository(Category);
+    const transactionRepository = getCustomRepository(TransactionsRepository);
 
-    const { total } = await transactionsRepository.getBalance();
+    const categoryCapitalized =
+      category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+    const { total } = await transactionRepository.getBalance();
 
-    if (type === 'outcome' && total < value) {
-      throw new AppError(' You do not have enough balance');
+    if (!['income', 'outcome'].includes(type)) {
+      throw new AppError('Invalid type');
     }
-    let transactionCategory = await categoryRepository.findOne({
-      where: {
-        title: category,
-      },
+    if (type === 'outcome' && value > total) {
+      throw new AppError('Not enough cash');
+    }
+
+    if (
+      !(await categoryRepository.findOne({
+        where: { title: categoryCapitalized },
+      }))
+    ) {
+      const newCategory = categoryRepository.create({
+        title: categoryCapitalized,
+      });
+      await categoryRepository.save(newCategory);
+    }
+
+    const transactionCategory = await categoryRepository.findOne({
+      where: { title: categoryCapitalized },
     });
 
-    if (!transactionCategory) {
-      transactionCategory = categoryRepository.create({
-        title: category,
-      });
-
-      await categoryRepository.save(transactionCategory);
+    if (transactionCategory === undefined) {
+      throw new AppError('Database error.');
     }
-
-    const transaction = transactionsRepository.create({
+    const transaction = transactionRepository.create({
       title,
       value,
       type,
       category: transactionCategory,
     });
 
-    await transactionsRepository.save(transaction);
+    await transactionRepository.save(transaction);
 
     return transaction;
   }
