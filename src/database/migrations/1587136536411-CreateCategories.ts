@@ -1,11 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export default class CreateCategories1598665037036
+export default class CreateCategories1587136536411
   implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Adiciona a function uuid_generate_v4()
-    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
-
     await queryRunner.createTable(
       new Table({
         name: 'categories',
