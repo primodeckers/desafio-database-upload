@@ -1,50 +1,40 @@
 import {
   Entity,
-  Column,
   PrimaryGeneratedColumn,
-  ManyToOne,
+  Column,
+  OneToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import Category from './Category';
-import ColumnNumericTransformer from '../utils/ColumnNumericTransformer';
 
 @Entity('transactions')
 class Transaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('varchar')
   title: string;
 
-  @Column()
+  @Column({ name: 'type', type: 'enum', enum: ['income', 'outcome'] })
   type: 'income' | 'outcome';
 
-  @Column('numeric', {
-    precision: 10,
-    scale: 2,
-    transformer: new ColumnNumericTransformer(),
-  })
+  @Column('decimal')
   value: number;
-
-  @Column({
-    select: false,
-  })
-  category_id: string;
 
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
-  @CreateDateColumn({
-    select: false,
-  })
+  @Column({ name: 'category_id', type: 'varchar' })
+  category_id: string;
+
+  @CreateDateColumn()
   created_at: Date;
 
-  @UpdateDateColumn({
-    select: false,
-  })
+  @UpdateDateColumn()
   updated_at: Date;
 }
 

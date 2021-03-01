@@ -1,9 +1,9 @@
 import {
   Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('categories')
@@ -11,17 +11,13 @@ class Category {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('varchar')
   title: string;
 
-  @CreateDateColumn({
-    select: false,
-  })
+  @CreateDateColumn()
   created_at: Date;
 
-  @UpdateDateColumn({
-    select: false,
-  })
+  @UpdateDateColumn()
   updated_at: Date;
 }
 

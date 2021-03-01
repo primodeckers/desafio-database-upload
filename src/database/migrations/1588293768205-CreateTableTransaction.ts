@@ -1,69 +1,58 @@
-import {
-  MigrationInterface,
-  QueryRunner,
-  Table,
-  TableForeignKey,
-} from 'typeorm';
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export default class CreateTransactions1586988553071
+export default class CreateTableTransaction1588293768205
   implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
     await queryRunner.createTable(
       new Table({
         name: 'transactions',
         columns: [
           {
             name: 'id',
-            type: 'uuid',
-            isPrimary: true,
+            type: 'varchar',
             generationStrategy: 'uuid',
             default: 'uuid_generate_v4()',
-          },
-          {
-            name: 'title',
-            type: 'varchar',
-          },
-          {
-            name: 'category_id',
-            type: 'uuid',
-          },
-          {
-            name: 'type',
-            type: 'varchar',
+            isPrimary: true,
           },
           {
             name: 'value',
             type: 'decimal',
+            isNullable: false,
+          },
+          {
+            name: 'title',
+            type: 'varchar',
+            isNullable: false,
+          },
+          {
+            name: 'type',
+            type: 'enum',
+            enum: ['income', 'outcome'],
+          },
+          {
+            name: 'category_id',
+            type: 'varchar',
+            isNullable: false,
           },
           {
             name: 'created_at',
             type: 'timestamp',
+            isNullable: false,
             default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
+            isNullable: false,
             default: 'now()',
           },
         ],
       }),
     );
-
-    await queryRunner.createForeignKey(
-      'transactions',
-      new TableForeignKey({
-        name: 'TransactionCategory',
-        columnNames: ['category_id'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'categories',
-        onUpdate: 'CASCADE',
-      }),
-    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropForeignKey('transactions', 'TransactionCategory');
-
     await queryRunner.dropTable('transactions');
   }
 }

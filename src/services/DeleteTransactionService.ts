@@ -1,26 +1,23 @@
-import { getRepository } from 'typeorm';
-import { isUuid } from 'uuidv4';
-import AppError from '../errors/AppError';
-import Transaction from '../models/Transaction';
+import { getCustomRepository } from 'typeorm';
 
-interface Request {
+import AppError from '../errors/AppError';
+import Transaction from '../repositories/TransactionsRepository';
+
+interface RequestDTO {
   id: string;
 }
+
 class DeleteTransactionService {
-  public async execute({ id }: Request): Promise<void> {
-    const transactionsRepository = getRepository(Transaction);
+  public async run({ id }: RequestDTO): Promise<void> {
+    if (!id) throw new AppError('id of transaction not provider');
 
-    if (!isUuid(id)) {
-      throw new AppError('Parameter invalid.');
-    }
+    const transactionRepository = getCustomRepository(Transaction);
+    // verifica se a transação existe
+    const transaction = await transactionRepository.findOne(id);
 
-    const transaction = await transactionsRepository.findOne({ where: { id } });
+    if (!transaction) throw new AppError('transaction not found');
 
-    if (!transaction) {
-      throw new AppError('Repository not found.');
-    }
-
-    await transactionsRepository.remove(transaction);
+    await transactionRepository.delete(id);
   }
 }
 

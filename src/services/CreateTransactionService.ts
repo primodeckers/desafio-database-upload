@@ -1,74 +1,81 @@
 import { getRepository, getCustomRepository } from 'typeorm';
-import AppError from '../errors/AppError';
 
+import AppError from '../errors/AppError';
 import Transaction from '../models/Transaction';
 import Category from '../models/Category';
-import TransactionsRepository from '../repositories/TransactionsRepository';
+import TransactionRepository from '../repositories/TransactionsRepository';
 
-interface Request {
+interface RequestDTO {
   title: string;
   value: number;
-  type: string;
+  type: 'income' | 'outcome';
   category: string;
 }
-class CreateTransactionService {
-  public async execute({
+
+export default class CreateTransactionService {
+  public async run({
     title,
     value,
     type,
     category,
-  }: Request): Promise<Transaction> {
-    if (type !== 'income' && type !== 'outcome') {
-      throw new AppError('Invalid type.');
-    }
+  }: RequestDTO): Promise<Transaction> {
+    // title não pode ser null
+    if (!title) throw new AppError("field 'title' cannot be empty");
 
-    if (value <= 0) {
-      throw new AppError('Value must be grater than 0.');
-    }
+    // nemo valor pode ser nulo
+    if (!value) throw new AppError("field 'value' cannot be empty");
+
+    // verificar o type
+
+    if (type !== 'income' && type !== 'outcome')
+      throw new AppError("field 'type' wrong value");
 
     const categoryRepository = getRepository(Category);
-    const transactionRepository = getCustomRepository(TransactionsRepository);
+    const transactionRepository = getCustomRepository(TransactionRepository);
 
     if (type === 'outcome') {
-      const balance = await transactionRepository.getBalance();
+      const incomeBalance = await transactionRepository.getIncomeBalance();
 
-      if (balance.total - value < 0) {
-        throw new AppError('Not sufficient balance.');
-      }
+      if (value > incomeBalance.income)
+        throw new AppError(
+          'transaction not approved, values above what is available.',
+        );
     }
 
-    const transaction = transactionRepository.create({
-      title,
-      value,
-      type,
-    });
-
     const categoryExists = await categoryRepository.findOne({
-      where: { title: category },
+      where: {
+        title: category,
+      },
     });
 
-    if (categoryExists) {
-      transaction.category_id = categoryExists.id;
-      transaction.category = categoryExists;
-    } else {
-      const newCategory = categoryRepository.create({
+    if (!categoryExists) {
+      const newCategory = await categoryRepository.create({
         title: category,
       });
 
       await categoryRepository.save(newCategory);
 
-      transaction.category_id = newCategory.id;
-      transaction.category = newCategory;
+      const transaction = await transactionRepository.create({
+        title,
+        value,
+        type,
+        category_id: newCategory.id,
+      });
+
+      await transactionRepository.save(transaction);
+
+      return transaction;
     }
 
-    await transactionRepository.save(transaction);
+    const transaction = await transactionRepository.create({
+      title,
+      value,
+      type,
+      category_id: categoryExists.id,
+    });
 
-    delete transaction.category_id;
-    delete transaction.created_at;
-    delete transaction.updated_at;
+    await transactionRepository.save(transaction);
 
     return transaction;
   }
 }
-
-export default CreateTransactionService;
