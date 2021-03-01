@@ -2,9 +2,9 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 import Transaction from './Transaction';
@@ -18,7 +18,7 @@ class Category {
   title: string;
 
   @OneToMany(() => Transaction, transaction => transaction.category)
-  transaction: Transaction;
+  transactions: Transaction;
 
   @CreateDateColumn()
   created_at: Date;
