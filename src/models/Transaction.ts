@@ -1,13 +1,14 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  JoinColumn,
+  PrimaryGeneratedColumn,
   ManyToOne,
   CreateDateColumn,
+  UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
-
 import Category from './Category';
+import ColumnNumericTransformer from '../utils/ColumnNumericTransformer';
 
 @Entity('transactions')
 class Transaction {
@@ -20,20 +21,30 @@ class Transaction {
   @Column()
   type: 'income' | 'outcome';
 
-  @Column()
+  @Column('numeric', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   value: number;
 
-  @ManyToOne(() => Category, category => category.transaction, { eager: true })
+  @Column({
+    select: false,
+  })
+  category_id: string;
+
+  @ManyToOne(() => Category)
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
-  @Column()
-  category_id: string;
-
-  @CreateDateColumn()
+  @CreateDateColumn({
+    select: false,
+  })
   created_at: Date;
 
-  @CreateDateColumn()
+  @UpdateDateColumn({
+    select: false,
+  })
   updated_at: Date;
 }
 

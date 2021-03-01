@@ -1,18 +1,23 @@
-import { getCustomRepository, TransactionRepository } from 'typeorm';
+import { getRepository } from 'typeorm';
+import { isUuid } from 'uuidv4';
 import AppError from '../errors/AppError';
-
 import Transaction from '../models/Transaction';
 
-import TransactionsRepository from '../repositories/TransactionsRepository';
-
+interface Request {
+  id: string;
+}
 class DeleteTransactionService {
-  public async execute(id: string): Promise<void> {
-    const transactionsRepository = getCustomRepository(TransactionsRepository);
+  public async execute({ id }: Request): Promise<void> {
+    const transactionsRepository = getRepository(Transaction);
 
-    const transaction = await transactionsRepository.findOne(id);
+    if (!isUuid(id)) {
+      throw new AppError('Parameter invalid.');
+    }
+
+    const transaction = await transactionsRepository.findOne({ where: { id } });
 
     if (!transaction) {
-      throw new AppError('Transaction does not exists!');
+      throw new AppError('Repository not found.');
     }
 
     await transactionsRepository.remove(transaction);
