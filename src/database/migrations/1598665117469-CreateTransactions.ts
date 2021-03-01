@@ -1,58 +1,70 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
-export default class CreateTableTransaction1588293768205
+export default class CreateTransactions1598665117469
   implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
     await queryRunner.createTable(
       new Table({
         name: 'transactions',
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
+            isPrimary: true,
             generationStrategy: 'uuid',
             default: 'uuid_generate_v4()',
-            isPrimary: true,
-          },
-          {
-            name: 'value',
-            type: 'decimal',
-            isNullable: false,
           },
           {
             name: 'title',
             type: 'varchar',
-            isNullable: false,
+          },
+          {
+            name: 'value',
+            type: 'integer',
           },
           {
             name: 'type',
-            type: 'enum',
-            enum: ['income', 'outcome'],
+            type: 'varchar',
           },
           {
             name: 'category_id',
-            type: 'varchar',
-            isNullable: false,
+            type: 'uuid',
+            isNullable: true,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            isNullable: false,
             default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            isNullable: false,
             default: 'now()',
           },
         ],
       }),
     );
+
+    await queryRunner.createForeignKey(
+      'transactions',
+      new TableForeignKey({
+        name: 'TransactionCategory',
+        columnNames: ['category_id'],
+        referencedColumnNames: ['id'],
+        referencedTableName: 'categories',
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE',
+      }),
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.dropForeignKey('appointments', 'AppointmentProvider');
     await queryRunner.dropTable('transactions');
   }
 }
