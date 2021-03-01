@@ -1,11 +1,6 @@
-import {
-  MigrationInterface,
-  QueryRunner,
-  Table,
-  TableForeignKey,
-} from 'typeorm';
+import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
-export default class CreateTransactions1587046984438
+export default class CreateTransactions1589758849285
   implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
@@ -14,7 +9,7 @@ export default class CreateTransactions1587046984438
         columns: [
           {
             name: 'id',
-            type: 'uuid',
+            type: 'uuid ',
             isPrimary: true,
             generationStrategy: 'uuid',
             default: 'uuid_generate_v4()',
@@ -22,22 +17,16 @@ export default class CreateTransactions1587046984438
           {
             name: 'title',
             type: 'varchar',
-            isNullable: false,
-          },
-          {
-            name: 'value',
-            type: 'float',
-            isNullable: false,
           },
           {
             name: 'type',
             type: 'varchar',
-            isNullable: false,
           },
           {
-            name: 'category_id',
-            type: 'uuid',
-            isNullable: true,
+            name: 'value',
+            type: 'decimal',
+            precision: 10,
+            scale: 2,
           },
           {
             name: 'created_at',
@@ -52,22 +41,9 @@ export default class CreateTransactions1587046984438
         ],
       }),
     );
-
-    await queryRunner.createForeignKey(
-      'transactions',
-      new TableForeignKey({
-        name: 'TransactionCategory',
-        columnNames: ['category_id'],
-        referencedColumnNames: ['id'],
-        referencedTableName: 'categories',
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-      }),
-    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropForeignKey('transactions', 'TransactionCategory');
     await queryRunner.dropTable('transactions');
   }
 }

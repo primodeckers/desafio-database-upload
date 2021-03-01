@@ -6,4 +6,3 @@ temp/
 
 tmp/*
 !tmp/.gitkeep
-.env
